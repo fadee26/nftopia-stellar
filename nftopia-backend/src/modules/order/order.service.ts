@@ -79,10 +79,14 @@ export class OrderService {
       .addSelect('COUNT(order.id)', 'count')
       .addSelect('AVG(order.price)', 'averagePrice')
       .where('order.nftId = :nftId', { nftId });
-    const stats = (await qb.getRawOne()) || { volume: '0', count: '0', averagePrice: '0' };
+    const stats = ((await qb.getRawOne()) as {
+      volume: string | null;
+      count: string | null;
+      averagePrice: string | null;
+    }) || { volume: '0', count: '0', averagePrice: '0' };
     return {
       volume: stats.volume ?? '0',
-      count: stats.count ?? '0',
+      count: Number(stats.count ?? 0),
       averagePrice: stats.averagePrice ?? '0',
     };
   }
