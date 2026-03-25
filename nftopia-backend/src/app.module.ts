@@ -9,7 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { NftModule } from './nft/nft.module';
 import { AuctionModule } from './modules/auction/auction.module';
-import { ListingModule } from './modules/listing/listing.module';
+import { OrderModule } from './modules/order/order.module';
 import { LoggerModule } from 'nestjs-pino';
 import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -84,8 +84,7 @@ import { GraphqlGatewayModule } from './graphql/graphql.module';
         ]),
     NftModule,
     AuctionModule,
-    // Listing module
-    ListingModule,
+  OrderModule,
     StorageModule,
     GraphqlGatewayModule,
   ],
