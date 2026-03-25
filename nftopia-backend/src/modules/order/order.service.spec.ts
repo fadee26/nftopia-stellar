@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 
 describe('OrderService', () => {
   let service: OrderService;
+  let repo: Repository<Order>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -19,7 +20,6 @@ describe('OrderService', () => {
     }).compile();
 
     service = module.get<OrderService>(OrderService);
-    repo = module.get<Repository<Order>>(getRepositoryToken(Order));
   });
 
   it('should be defined', () => {

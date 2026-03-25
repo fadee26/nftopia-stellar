@@ -4,6 +4,7 @@ import { OrderService } from './order.service';
 
 describe('OrderController', () => {
   let controller: OrderController;
+  let service: OrderService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -23,7 +24,6 @@ describe('OrderController', () => {
     }).compile();
 
     controller = module.get<OrderController>(OrderController);
-    service = module.get<OrderService>(OrderService);
   });
 
   it('should be defined', () => {
