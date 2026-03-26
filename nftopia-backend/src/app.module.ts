@@ -11,18 +11,14 @@ import { NftModule } from './nft/nft.module';
 import { AuctionModule } from './modules/auction/auction.module';
 import { ListingModule } from './modules/listing/listing.module';
 import { LoggerModule } from 'nestjs-pino';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { StorageModule } from './storage/storage.module';
 import { GraphqlGatewayModule } from './graphql/graphql.module';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
-import { RateLimitInterceptor } from './common/interceptors/rate-limit.interceptor';
+import { RedisRateGuard } from './common/guards/redis-rate.guard';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot({ ttl: 60, limit: 100 }),
-    // Throttler configured globally for rate limiting.
     LoggerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -67,7 +63,7 @@ import { RateLimitInterceptor } from './common/interceptors/rate-limit.intercept
       ? []
       : [
           TypeOrmModule.forRootAsync({
-            imports: [ConfigModule], // TypeOrm still needs imports
+            imports: [ConfigModule],
             inject: [ConfigService],
             useFactory: (config: ConfigService) => ({
               type: 'postgres',
@@ -89,7 +85,6 @@ import { RateLimitInterceptor } from './common/interceptors/rate-limit.intercept
         ]),
     NftModule,
     AuctionModule,
-    // Listing module
     ListingModule,
     StorageModule,
     GraphqlGatewayModule,
@@ -102,12 +97,8 @@ import { RateLimitInterceptor } from './common/interceptors/rate-limit.intercept
       useClass: HttpExceptionFilter,
     },
     {
-      provide: APP_INTERCEPTOR,
-      useClass: RateLimitInterceptor,
-    },
-    {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: RedisRateGuard,
     },
   ],
 })
