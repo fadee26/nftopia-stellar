@@ -147,8 +147,8 @@ describe('CollectionController', () => {
 
       const result = await controller.getNftsInCollection(
         mockCollection.id,
-        1,
-        20,
+        '1',
+        '20',
       );
 
       expect(result).toEqual(mockResult);
