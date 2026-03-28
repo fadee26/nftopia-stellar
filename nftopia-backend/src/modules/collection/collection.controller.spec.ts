@@ -62,7 +62,7 @@ describe('CollectionController', () => {
         total: 1,
         page: 1,
         limit: 20,
-      };
+      } as const;
 
       mockCollectionService.findAll.mockResolvedValue(mockResult);
 

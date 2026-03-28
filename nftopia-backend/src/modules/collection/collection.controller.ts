@@ -17,13 +17,19 @@ import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { CollectionQueryDto } from './dto/collection-query.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
+import {
+  CollectionConnectionResult,
+  CollectionStatsResult,
+} from './interfaces/collection.interface';
 
 @Controller('api/v1/collections')
 export class CollectionController {
   constructor(private readonly collectionService: CollectionService) {}
 
   @Get()
-  async findAll(@Query() query: CollectionQueryDto) {
+  async findAll(
+    @Query() query: CollectionQueryDto,
+  ): Promise<CollectionConnectionResult> {
     return await this.collectionService.findAll(query);
   }
 
@@ -44,7 +50,9 @@ export class CollectionController {
   }
 
   @Get(':id/stats')
-  async getStats(@Param('id', ParseUUIDPipe) id: string) {
+  async getStats(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<CollectionStatsResult> {
     return await this.collectionService.getStats(id);
   }
 

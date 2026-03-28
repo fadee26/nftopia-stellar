@@ -48,7 +48,9 @@ export class CollectionService {
     return this.findById(id);
   }
 
-  async findAll(query: any): Promise<any> {
+  async findAll(
+    query: CollectionConnectionQuery,
+  ): Promise<CollectionConnectionResult> {
     return this.findConnection(query);
   }
 
