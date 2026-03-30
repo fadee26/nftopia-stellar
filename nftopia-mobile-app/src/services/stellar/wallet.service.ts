@@ -1,42 +1,93 @@
-/**
- * StellarWalletService stub — full implementation tracked in Issue #112.
- *
- * This interface matches the spec in Issue #112 and is consumed by the
- * wallet creation/import screens (Issue #117). Replace with the real
- * implementation once Issue #112 is merged.
- */
-
-import { Wallet, WalletCreateResult } from './types';
+import { Keypair } from 'stellar-sdk';
+import StellarHDWallet from 'stellar-hd-wallet';
+import { Wallet, WalletCreateResult, WalletError, WalletErrorCode } from './types';
+import {
+  isValidSecretKey,
+  isValidMnemonic,
+  assertValidSecretKey,
+  assertValidMnemonic,
+} from './validation';
+import { SecureStorage } from './secureStorage';
 
 export class StellarWalletService {
-  async createWallet(_password?: string): Promise<WalletCreateResult> {
-    throw new Error('StellarWalletService.createWallet not yet implemented (Issue #112)');
+  private readonly storage: SecureStorage;
+
+  constructor(storage?: SecureStorage) {
+    this.storage = storage ?? new SecureStorage();
   }
 
-  async importFromSecretKey(_secretKey: string, _password?: string): Promise<Wallet> {
-    throw new Error('StellarWalletService.importFromSecretKey not yet implemented (Issue #112)');
+  async createWallet(password?: string): Promise<WalletCreateResult> {
+    const mnemonic = StellarHDWallet.generateMnemonic();
+    const hdWallet = StellarHDWallet.fromMnemonic(mnemonic);
+    const keypair = hdWallet.getKeypair(0);
+    const wallet: Wallet = {
+      publicKey: keypair.publicKey(),
+      secretKey: keypair.secret(),
+      mnemonic,
+    };
+    await this.storage.saveWallet(wallet, password);
+    return { wallet, mnemonic };
   }
 
-  async importFromMnemonic(_mnemonic: string, _password?: string): Promise<Wallet> {
-    throw new Error('StellarWalletService.importFromMnemonic not yet implemented (Issue #112)');
+  async importFromSecretKey(secretKey: string, password?: string): Promise<Wallet> {
+    assertValidSecretKey(secretKey);
+    const keypair = Keypair.fromSecret(secretKey);
+    const wallet: Wallet = {
+      publicKey: keypair.publicKey(),
+      secretKey,
+    };
+    await this.storage.saveWallet(wallet, password);
+    return wallet;
   }
 
-  async signMessage(_message: string, _secretKey: string): Promise<string> {
-    throw new Error('StellarWalletService.signMessage not yet implemented (Issue #112)');
+  async importFromMnemonic(mnemonic: string, password?: string): Promise<Wallet> {
+    assertValidMnemonic(mnemonic);
+    try {
+      const hdWallet = StellarHDWallet.fromMnemonic(mnemonic);
+      const keypair = hdWallet.getKeypair(0);
+      const wallet: Wallet = {
+        publicKey: keypair.publicKey(),
+        secretKey: keypair.secret(),
+        mnemonic,
+      };
+      await this.storage.saveWallet(wallet, password);
+      return wallet;
+    } catch (err) {
+      if (err instanceof WalletError) throw err;
+      throw new WalletError(
+        `Failed to derive wallet from mnemonic: ${(err as Error).message}`,
+        WalletErrorCode.INVALID_MNEMONIC,
+      );
+    }
   }
 
-  getPublicKey(_secretKey: string): string {
-    throw new Error('StellarWalletService.getPublicKey not yet implemented (Issue #112)');
+  async signMessage(message: string, secretKey: string): Promise<string> {
+    assertValidSecretKey(secretKey);
+    try {
+      const keypair = Keypair.fromSecret(secretKey);
+      const messageBuffer = Buffer.from(message, 'utf-8');
+      const signature = keypair.sign(messageBuffer);
+      return Buffer.from(signature).toString('base64');
+    } catch (err) {
+      if (err instanceof WalletError) throw err;
+      throw new WalletError(
+        `Failed to sign message: ${(err as Error).message}`,
+        WalletErrorCode.SIGN_ERROR,
+      );
+    }
+  }
+
+  getPublicKey(secretKey: string): string {
+    assertValidSecretKey(secretKey);
+    return Keypair.fromSecret(secretKey).publicKey();
   }
 
   isValidSecretKey(key: string): boolean {
-    // Stellar secret keys start with 'S' and are 56 characters
-    return /^S[A-Z2-7]{55}$/.test(key.trim());
+    return isValidSecretKey(key);
   }
 
   isValidMnemonic(phrase: string): boolean {
-    const words = phrase.trim().split(/\s+/);
-    return words.length === 12 || words.length === 24;
+    return isValidMnemonic(phrase);
   }
 }
 
