@@ -19,6 +19,12 @@ export interface UserProfile {
   username: string;
 }
 
+// Response shape for email-based auth endpoints (tokens wrapped in object)
+export interface EmailAuthResponse {
+  tokens: AuthTokens;
+  user: UserProfile;
+}
+
 // API-level error shape returned by the backend on failure
 export interface ApiAuthError {
   message: string;
